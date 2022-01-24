@@ -408,24 +408,24 @@ export const extractData = async (files) => {
 
     console.log(`[debug] ${extractedData.topGroupDMs.length} top DMs loaded.`);
 
-    // loadTask.set('Calculating statistics...');
-    // console.log('[debug] Fetching activity...');
+    loadTask.set('Calculating statistics...');
+    console.log('[debug] Fetching activity...');
 
-    // const statistics = await readAnalyticsFile(files.find((file) => /activity\/analytics\/events-[0-9]{4}-[0-9]{5}-of-[0-9]{5}\.json/.test(file.name)));
-    // extractedData.openCount = statistics.openCount;
-    // extractedData.averageOpenCountPerDay = extractedData.openCount && perDay(statistics.openCount, extractedData.user.id);
-    // extractedData.notificationCount = statistics.notificationCount;
-    // extractedData.joinVoiceChannelCount = statistics.joinVoiceChannelCount; 
-    // extractedData.joinCallCount = statistics.joinCallCount;
-    // extractedData.addReactionCount = statistics.addReactionCount;
-    // extractedData.messageEditedCount = statistics.messageEditedCount;
-    // extractedData.sentMessageCount = statistics.sendMessageCount;
-    // extractedData.averageMessageCountPerDay = extractedData.sentMessageCount && perDay(extractedData.sentMessageCount, extractedData.user.id);
-    // extractedData.slashCommandUsedCount = statistics.slashCommandUsedCount;
+    const statistics = await readAnalyticsFile(files.find((file) => /activity\/analytics\/events-[0-9]{4}-[0-9]{5}-of-[0-9]{5}\.json/.test(file.name)));
+    extractedData.openCount = statistics.openCount;
+    extractedData.averageOpenCountPerDay = extractedData.openCount && perDay(statistics.openCount, extractedData.user.id);
+    extractedData.notificationCount = statistics.notificationCount;
+    extractedData.joinVoiceChannelCount = statistics.joinVoiceChannelCount; 
+    extractedData.joinCallCount = statistics.joinCallCount;
+    extractedData.addReactionCount = statistics.addReactionCount;
+    extractedData.messageEditedCount = statistics.messageEditedCount;
+    extractedData.sentMessageCount = statistics.sendMessageCount;
+    extractedData.averageMessageCountPerDay = extractedData.sentMessageCount && perDay(extractedData.sentMessageCount, extractedData.user.id);
+    extractedData.slashCommandUsedCount = statistics.slashCommandUsedCount;
 
-    // console.log('[debug] Activity fetched...');
+    console.log('[debug] Activity fetched...');
 
-    // loadTask.set('Calculating statistics...');
+    loadTask.set('Calculating statistics...');
 
     console.log(extractedData);
 
