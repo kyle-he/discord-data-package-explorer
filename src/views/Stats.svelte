@@ -1,7 +1,7 @@
 <script>
     import { blur } from 'svelte/transition';
     import { data } from '../app/store';
-    import { generateAvatarURL, getGitHubContributors } from '../app/helpers';
+    import { generateAvatarURL, generateGroupDMIcon, getGitHubContributors } from '../app/helpers';
     import generateDemoData from '../app/demo';
     import Chart from 'svelte-frappe-charts';
     import Modal from '../components/Modal.svelte';
@@ -167,7 +167,7 @@
                         {#each $data.topGroupDMs as channel, i}
                             <LeaderboardItem
                                 position={i}
-                                avatarURL={generateAvatarURL(null, null, channel.id)}
+                                avatarURL={generateGroupDMIcon(channel.id)}
                                 name={channel.name}
                                 numUsers={channel.numUsers}
                                 count={channel.messageCount.toLocaleString('en-US')}
