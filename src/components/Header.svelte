@@ -5,8 +5,7 @@
 <template>
     <div class="app-header">
         <div class="app-header-container">
-            <div class="app-header-icon tag"><a href="/" use:link>#</a></div>
-            <h1 on:click="{() => navigate('/')}">Discord Data Package Explorer</h1>
+            <h1 on:click="{() => navigate('/')}">Discord Data Package Explorer (Expanded)</h1>
         </div>
     </div>
 </template>
@@ -15,7 +14,7 @@
     .app-header {
         width: 100%;
         position: fixed;
-        background-color: var(--secondary-background-color);
+        background-color: var(--main-color);
         z-index: 9;
     }
     .app-header-container {

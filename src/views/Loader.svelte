@@ -89,6 +89,7 @@
 <template>
     <div class="app-loader">
         <div class="app-loader-boxes">
+            <p class="app-loader-disclaimer">Disclaimer: This website is a fork of <a href="https://ddpe.androz2091.fr/">DDPE</a>. </p>
             <p class="app-loader-description"><a href="/" use:link>DDPE</a> is a website that generates stats from your Discord Data Package. It is your device that processes the data, nothing is sent to any server!</p>
             <p>
                 <a class="app-loader-tuto" href="/help" use:link>
@@ -135,10 +136,15 @@
 	.app-loader-boxes {
 		padding: 0 30px;
 	}
+    .app-loader-disclaimer {
+        font-weight: 500;
+        margin: auto;
+        margin-top: 3rem;
+	}
 	.app-loader-description {
         font-weight: 500;
         margin: auto;
-        margin-top: 5rem;
+        margin-top: 3rem;
         margin-bottom: 3rem;
 	}
 	.app-loader-tuto {

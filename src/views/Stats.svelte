@@ -162,6 +162,33 @@
                         explanation="That's ~{ Math.round($data.channelCount / $data.guildCount) } per guild!"
                     />
                 </Card>
+                <Card name="top-group-dms">
+                    <Leaderboard title="Top Group DMs" description="Group DM's you chat the most in!">
+                        {#each $data.topGroupDMs as channel, i}
+                            <LeaderboardItem
+                                position={i}
+                                avatarURL={generateAvatarURL(null, null, channel.id)}
+                                name={channel.name}
+                                numUsers={channel.numUsers}
+                                count={channel.messageCount.toLocaleString('en-US')}
+                                groupDM
+                            />
+                        {/each}
+                    </Leaderboard>
+                </Card>
+                <Card name="top-users-2">
+                    <Leaderboard title="Top User Interactions" description="The users you chat the most with, including group chats!">
+                        {#each $data.topUsers as user, i}
+                            <LeaderboardItem
+                                position={i}
+                                avatarURL={generateAvatarURL(user.userData.avatar, user.userData.id, user.userData.discriminator)}
+                                name={user.userData.username}
+                                discriminator={user.userData.discriminator}
+                                count={user.messageCount.toLocaleString('en-US')}
+                            />
+                        {/each}
+                    </Leaderboard>
+                </Card>
                 <Card name="top-users">
                     <Leaderboard title="Top Users" description="The users you chat the most with!">
                         {#each $data.topDMs as channel, i}
@@ -214,6 +241,12 @@
                                 </a>
                             </SvelteTooltip>
                         {/await}
+                    </div>
+                </Card>
+                <Card name="about-2">
+                    <div style="text-align: center;">
+                        <h2>About this fork</h2>
+                        <p>DDPE (Expanded) adds a couple extra features, notably an inclusion of group chats. It is also free and <a href="https://github.com/kyle-he/discord-data-package-explorer" target="_blank" class="text-discord" style="text-decoration: none;">open source.</a>
                     </div>
                 </Card>
             </div>

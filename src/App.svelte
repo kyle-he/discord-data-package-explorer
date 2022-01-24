@@ -38,7 +38,7 @@
 </script>
 
 <svelte:head>
-	<title>Discord Data Package Explorer</title>
+	<title>Discord Data Package Explorer (Expanded)</title>
 </svelte:head>
 
 <main class="app">

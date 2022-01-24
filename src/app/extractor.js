@@ -27,6 +27,28 @@ const fetchUser = async (userID) => {
 };
 
 /**
+ * Convert Group DM to Group DM Names
+ * This is used to handle the names of group DMs.
+ * @param channel
+ */
+const generateName = async (channel) => {
+    if (channel.name == null || channel.name.length === 0){
+        let groupDMList = [];
+        await Promise.all(channel.recipients.map((userID) => {
+            return new Promise((resolve) => {
+                fetchUser(userID).then((userData) => {
+                    groupDMList.push(userData.username);
+                    resolve();
+                });
+            });
+        }));
+        return groupDMList.join(", ");
+    } else {
+        return channel.name;
+    }
+};
+
+/**
  * Parse the mention to return a user ID
  */
 const parseMention = (mention) => {
@@ -118,7 +140,9 @@ export const extractData = async (files) => {
         user: null,
 
         topDMs: [],
+        topUsers: [],
         topChannels: [],
+        topGroupDMs: new Map(),
         guildCount: 0,
         dmChannelCount: 0,
         channelCount: 0,
@@ -207,14 +231,22 @@ export const extractData = async (files) => {
                 const data = JSON.parse(rawData);
                 const messages = parseCSV(rawMessages);
                 const name = messagesIndex[data.id];
+
+                // DMs
                 const isDM = data.recipients && data.recipients.length === 2;
                 const dmUserID = isDM ? data.recipients.find((userID) => userID !== extractedData.user.id) : undefined;
+
+                // Group DMs
+                const isGroupDM = data.recipients && data.recipients.length > 2;
+                const groupDMID = isGroupDM ? data.id : undefined;
                 channels.push({
                     data,
                     messages,
                     name,
                     isDM,
-                    dmUserID
+                    dmUserID,
+                    isGroupDM,
+                    groupDMID
                 });
 
                 resolve();
@@ -288,24 +320,112 @@ export const extractData = async (files) => {
 
     console.log(`[debug] ${extractedData.topDMs.length} top DMs loaded.`);
 
-    loadTask.set('Calculating statistics...');
-    console.log('[debug] Fetching activity...');
+    console.log(`[debug] Fetching top users.`);
+    loadTask.set('Fetching top users...')
+    var DMChannels = channels
+        .filter((channel) => channel.isDM)
+        .map((channel) => ({
+            recipients: channel.data.recipients,
+            messageCount: channel.messages.length
+        }));
+    var GroupDMChannels = channels
+        .filter((channel) => channel.isGroupDM)        
+        .map((channel) => ({
+            recipients: channel.data.recipients,
+            messageCount: channel.messages.length
+        }));
+    
+    var userCounts = {}
+    for (const channel of DMChannels){
+        for (const recipient of channel.recipients){
+            if (recipient in userCounts){
+                userCounts[recipient] += channel.messageCount;
+            } else {
+                userCounts[recipient] = channel.messageCount;
+            }
+        }
+    }
+    for (const channel of GroupDMChannels){
+        for (const recipient of channel.recipients){
+            if (recipient in userCounts){
+                userCounts[recipient] += channel.messageCount;
+            } else {
+                userCounts[recipient] = channel.messageCount;
+            }
+        }
+    }
+    
+    var allUsers = []
+    for (const user in userCounts){
+        allUsers.push({
+            id: user,
+            messageCount: userCounts[user],
+            userData: null
+        })
+    }
 
-    const statistics = await readAnalyticsFile(files.find((file) => /activity\/analytics\/events-[0-9]{4}-[0-9]{5}-of-[0-9]{5}\.json/.test(file.name)));
-    extractedData.openCount = statistics.openCount;
-    extractedData.averageOpenCountPerDay = extractedData.openCount && perDay(statistics.openCount, extractedData.user.id);
-    extractedData.notificationCount = statistics.notificationCount;
-    extractedData.joinVoiceChannelCount = statistics.joinVoiceChannelCount; 
-    extractedData.joinCallCount = statistics.joinCallCount;
-    extractedData.addReactionCount = statistics.addReactionCount;
-    extractedData.messageEditedCount = statistics.messageEditedCount;
-    extractedData.sentMessageCount = statistics.sendMessageCount;
-    extractedData.averageMessageCountPerDay = extractedData.sentMessageCount && perDay(extractedData.sentMessageCount, extractedData.user.id);
-    extractedData.slashCommandUsedCount = statistics.slashCommandUsedCount;
+    // 1 to 11 because 1st index is self
+    extractedData.topUsers = allUsers
+        .sort((a, b) => b.messageCount - a.messageCount)
+        .slice(1, 11);
+    
+    await Promise.all(extractedData.topUsers.map((user) => {
+        return new Promise((resolve) => {
+            fetchUser(user.id).then((userData) => {
+                const userIndex = extractedData.topUsers.findIndex((u) => u.id === user.id);
+                extractedData.topUsers[userIndex].userData = userData;
+                console.log(user.id);
+                resolve();
+            });
+        });
+    }));
 
-    console.log('[debug] Activity fetched...');
+    console.log(`[debug] ${extractedData.topUsers.length} top users loaded.`);
 
-    loadTask.set('Calculating statistics...');
+    console.log('[debug] Fetching top group DMs...');
+    loadTask.set('Loading user activity...');
+    extractedData.topGroupDMs = channels
+        .filter(c => c.isGroupDM)
+        .sort((a, b) => b.messages.length - a.messages.length)
+        .slice(0, 10)
+        .map((channel) => ({
+            id: channel.data.id,
+            name: channel.data.name,
+            numUsers: channel.data.recipients.length,
+            messageCount: channel.messages.length,
+            recipients: channel.data.recipients
+    }));
+
+    await Promise.all(extractedData.topGroupDMs.map((channel) => {
+        return new Promise((resolve) => {
+            generateName(channel).then((channelName) => {
+                const channelIndex = extractedData.topGroupDMs.findIndex((c) => c.id === channel.id);
+                extractedData.topGroupDMs[channelIndex].name = channelName;
+                resolve();
+            });
+        });
+    }));
+
+    console.log(`[debug] ${extractedData.topGroupDMs.length} top DMs loaded.`);
+
+    // loadTask.set('Calculating statistics...');
+    // console.log('[debug] Fetching activity...');
+
+    // const statistics = await readAnalyticsFile(files.find((file) => /activity\/analytics\/events-[0-9]{4}-[0-9]{5}-of-[0-9]{5}\.json/.test(file.name)));
+    // extractedData.openCount = statistics.openCount;
+    // extractedData.averageOpenCountPerDay = extractedData.openCount && perDay(statistics.openCount, extractedData.user.id);
+    // extractedData.notificationCount = statistics.notificationCount;
+    // extractedData.joinVoiceChannelCount = statistics.joinVoiceChannelCount; 
+    // extractedData.joinCallCount = statistics.joinCallCount;
+    // extractedData.addReactionCount = statistics.addReactionCount;
+    // extractedData.messageEditedCount = statistics.messageEditedCount;
+    // extractedData.sentMessageCount = statistics.sendMessageCount;
+    // extractedData.averageMessageCountPerDay = extractedData.sentMessageCount && perDay(extractedData.sentMessageCount, extractedData.user.id);
+    // extractedData.slashCommandUsedCount = statistics.slashCommandUsedCount;
+
+    // console.log('[debug] Activity fetched...');
+
+    // loadTask.set('Calculating statistics...');
 
     console.log(extractedData);
 
